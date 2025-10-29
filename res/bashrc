@@ -1,0 +1,65 @@
+PATH=$PATH:/webroot/darkpi/sh
+_NAME=$(hostname)
+_IP=$(hostname -I)
+_DWEB=""
+if [ -f "/logs/darkweb_hostname.txt" ]; then
+    _DWEB=$(cat /logs/darkweb_hostname.txt)
+fi
+
+if [ -d "/etc/nginx/sites-enabled/" ]; then _ACC="http://"; else _ACC="ssh pi@"; fi
+
+echo ""
+echo "                                                            @     "
+echo "                                    @@(        @            @@@   "
+echo "                                 @@@@@@@@@@@@@@@@@     (@   @@@@  "
+echo "                              @@@@@@@  %@@@@@@ @@@@@@@@@@@ @@@@@@ "
+echo "                           @@@@@@@       #@@&   @@@@@@@@@@@@@@@@@@"
+echo "                   .@@@@@@@@@@@           @@     .@@* @@@@@@@@ @@@"
+echo "                  @@@@@@@@@@@@            /@        @@@@@@@@@  @@@"
+echo "                @@@@     @@@                %        @@@ .@@   @@@"
+echo "              @@@@      /@@                          *@  @@    @@@"
+echo "            &@@@@       @@                       @@#          @@@@"
+echo "           (@@@         @%                                    @@@ "
+echo "           @@@          @                 @                   @@@*"
+echo "           @@@                            @@@                 @@@ "
+echo "           @@@                             @@@@@             @@@@ "
+echo "          &@@@ @                            @@@@@@@@@@.    /@@@@  "
+echo "         @@@@(  @           .@             @@   @@@@@@@@@@@@@@@   "
+echo "       @@@@@@(  @@          @@           @@@.  ,@@@               "
+echo "    (@@@@  @@@   @@@&       @@@       .@@@@    @@@@               "
+echo "           @@@@    @@@@@@   @@@      @@@@      @@@.               "
+echo "            @@@     @@@@@@@@@@@@      @@@      @@@                "
+echo "            @@@      @@/ .@@@@@@#     @@@      @@@                "
+echo "            @@@/     @@*    @@@@@      @@     &@@@                "
+echo "            @@@.      @&@@@@@@@@@@@@@@@@@@@@@@@@@@@               "
+echo "       ,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@, "
+
+if [ ! -z "$_IP" ]; then
+    echo ""
+    echo "----------------------------------------------------------------------"
+    echo ""
+    echo "  Access the server on your network:"
+    echo ""
+
+    for name in $_NAME; do
+        echo "    $_ACC$name.local"
+    done
+    for ip in $_IP; do
+        echo "    $_ACC$ip"
+    done
+
+    if [ ! -z "$_DWEB" ]; then
+        echo ""
+        echo "  Access the server on the darkweb:"
+        echo "    $_DWEB"
+    fi
+fi
+
+echo ""
+echo "----------------------------------------------------------------------"
+echo ""
+
+if [ -f /webroot/*/env/bin/activate ]; then
+    source /webroot/*/env/bin/activate
+fi
+
