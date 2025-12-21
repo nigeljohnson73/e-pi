@@ -10,7 +10,7 @@ import datetime
 from dateutil.parser import parse
 
 from inky.auto import auto
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 import time
 import gpiod
@@ -25,6 +25,44 @@ ics_file = "basic.ics"
 ics_url = "https://calendar.google.com/calendar/ical/millipods99%40gmail.com/public/basic.ics"
 base64_authtoken = None
 now = datetime.datetime.now(tz=datetime.timezone.utc)
+
+def draw_textr(image, angle, xy, text, fill, *args, **kwargs):
+    """ Draw text at an angle into an image, takes the same arguments
+        as Image.text() except for:
+
+    :param image: Image to write text into
+    :param angle: Angle to write text at
+    """
+    # get the size of our image
+    width, height = image.size
+    max_dim = max(width, height)
+
+    # build a transparency mask large enough to hold the text
+    mask_size = (max_dim * 2, max_dim * 2)
+    mask = Image.new('L', mask_size, 0)
+
+    # add text to mask
+    draw = ImageDraw.Draw(mask)
+    draw.text((max_dim, max_dim), text, 255, *args, **kwargs)
+
+    if angle % 90 == 0:
+        # rotate by multiple of 90 deg is easier
+        rotated_mask = mask.rotate(angle)
+    else:
+        # rotate an an enlarged mask to minimize jaggies
+        bigger_mask = mask.resize((max_dim*8, max_dim*8),
+                                  resample=Image.BICUBIC)
+        rotated_mask = bigger_mask.rotate(angle).resize(
+            mask_size, resample=Image.LANCZOS)
+
+    # crop the mask to match image
+    mask_xy = (max_dim - xy[0], max_dim - xy[1])
+    b_box = mask_xy + (mask_xy[0] + width, mask_xy[1] + height)
+    mask = rotated_mask.crop(b_box)
+
+    # paste the appropriate color, with the text transparency mask
+    color_image = Image.new('RGBA', image.size, fill)
+    image.paste(color_image, mask)
 
 def extractTokenText(key, s, dt=None):
     ret = dt
@@ -51,6 +89,7 @@ def extractUrlDetails(key, s, dt=None):
     return url
 
 def flashLights():
+    flash_duration = 0.25
     global all_done
     LED_PIN = 13
     chip = gpiodevice.find_chip_by_platform()
@@ -59,7 +98,7 @@ def flashLights():
 
     while True:
         gpio.set_value(led, Value.ACTIVE)
-        time.sleep(0.5)
+        time.sleep(flash_duration)
         gpio.set_value(led, Value.INACTIVE)
         c.acquire()
         if all_done:
@@ -67,13 +106,15 @@ def flashLights():
             return
 
         c.release()
-        time.sleep(0.5)
+        time.sleep(flash_duration)
 
 
 def loadEvents():
     global all_done
+    max_screen_events = 10
     # Get the data from the server
-    if False:
+    if True:
+        print (f"Updating remote event list")
         response = requests.get(ics_url)
         data = response.text
     
@@ -111,7 +152,21 @@ def loadEvents():
     
     im = Image.alpha_composite(im, overlay)
     im = im.convert("RGB")
+    draw = ImageDraw.Draw(im)
+    dfont_size = 40
+    tfont_size = 40
+    lfont_size = 32
+
+    tfont = ImageFont.truetype('fonts/title.ttf', tfont_size)
+    dfont = ImageFont.truetype('fonts/date.ttf', dfont_size)
+    lfont = ImageFont.truetype('fonts/location.ttf', lfont_size)
+
+    dfont_colour = (0xff, 0x00, 0x00)
+    tfont_colour = (0x00, 0x00, 0x00)
+    lfont_colour = (0x00, 0xcc, 0x00)
     
+    yy=BORDER
+    screen_events = 0
     for e in events:
         start = parse(e.get('DTSTART'))
         if start > now:
@@ -138,6 +193,22 @@ def loadEvents():
             url = extractUrlDetails("Website", desc)
             if url:
                 print(f"    Website: {url}")
+
+            if screen_events < max_screen_events:
+                screen_events += 1
+                print(f"    Display: yes")
+                #draw.text((BORDER+5, yy), f"{when}: {what}", font=titleFont, fill =(255, 0, 0))
+                draw_textr(im, 90, (yy, height-(BORDER+5)), f"{when}", font=dfont, fill =dfont_colour)
+                yy += dfont_size+5;
+                draw_textr(im, 90, (yy, height-(BORDER+5)), f"{what}", font=tfont, fill =tfont_colour)
+                yy += tfont_size+5;
+                draw_textr(im, 90, (yy, height-(BORDER+5)), f"{where}", font=lfont, fill =lfont_colour)
+                yy += lfont_size+5;
+
+                yy += 10
+            else:
+                print(f"    Display: no");
+
             print("")
     
     try:
