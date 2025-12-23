@@ -2,6 +2,7 @@
 
 import threading
 from urlextract import URLExtract
+import os
 import re
 import json
 import jicson
@@ -25,6 +26,9 @@ ics_file = "basic.ics"
 ics_url = "https://calendar.google.com/calendar/ical/millipods99%40gmail.com/public/basic.ics"
 base64_authtoken = None
 now = datetime.datetime.now(tz=datetime.timezone.utc)
+
+os.chdir(os.path.dirname(__file__))
+print(f"working directory: {os.path.dirname(__file__)}")
 
 def draw_textr(image, angle, xy, text, fill, *args, **kwargs):
     """ Draw text at an angle into an image, takes the same arguments
