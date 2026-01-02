@@ -7,8 +7,8 @@ import re
 import json
 import jicson
 import requests
-import datetime
 from dateutil.parser import parse
+from datetime import datetime, timezone
 
 from inky.auto import auto
 from PIL import Image, ImageDraw, ImageFont
@@ -21,11 +21,12 @@ from gpiod.line import Bias, Direction, Value
 c = threading.Condition()
 all_done = False
 
+connect_timeout = 30
 img_file = "bg/vango.jpg"
 ics_file = "basic.ics"
 ics_url = "https://calendar.google.com/calendar/ical/millipods99%40gmail.com/public/basic.ics"
 base64_authtoken = None
-now = datetime.datetime.now(tz=datetime.timezone.utc)
+now = datetime.now(tz=timezone.utc)
 
 os.chdir(os.path.dirname(__file__))
 print(f"working directory: {os.path.dirname(__file__)}")
@@ -114,13 +115,25 @@ def flashLights():
 
 
 def loadEvents():
-    global all_done
+    global all_done, now
     max_screen_events = 10
     # Get the data from the server
     if True:
-        print (f"Updating remote event list")
-        response = requests.get(ics_url)
-        data = response.text
+        retry = True
+        started = datetime.now(timezone.utc)
+        print (f"starting event list gathering")
+        while retry:
+            try:
+                response = requests.get(ics_url)
+                data = response.text
+                retry = False
+                print (f"Updating remote event list")
+            except:
+                now = datetime.now(timezone.utc)
+                duration = now - started
+                if duration.total_seconds() > connect_timeout:
+                    printf("Connection timeout for event list")
+                    return
     
         with open(ics_file, "w") as f:
             f.write(data)
