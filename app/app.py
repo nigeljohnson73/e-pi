@@ -23,7 +23,8 @@ all_done = False
 
 max_screen_events = 15
 connect_timeout = 30
-img_file = "bg/vango.jpg"
+#img_file = "bg/vango.jpg"
+img_file = "bg/e-ink.jpg"
 ics_file = "basic.ics"
 ics_url = "https://calendar.google.com/calendar/ical/millipods99%40gmail.com/public/basic.ics"
 base64_authtoken = None
