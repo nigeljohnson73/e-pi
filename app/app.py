@@ -21,6 +21,7 @@ from gpiod.line import Bias, Direction, Value
 c = threading.Condition()
 all_done = False
 
+max_screen_events = 15
 connect_timeout = 30
 img_file = "bg/vango.jpg"
 ics_file = "basic.ics"
@@ -115,8 +116,7 @@ def flashLights():
 
 
 def loadEvents():
-    global all_done, now
-    max_screen_events = 10
+    global all_done, now, max_screen_events
     # Get the data from the server
     if True:
         retry = True
@@ -170,9 +170,9 @@ def loadEvents():
     im = Image.alpha_composite(im, overlay)
     im = im.convert("RGB")
     draw = ImageDraw.Draw(im)
-    dfont_size = 40
-    tfont_size = 40
-    lfont_size = 32
+    dfont_size = 32 # date
+    tfont_size = 30 # title
+    lfont_size = 22 # Location
 
     tfont = ImageFont.truetype('fonts/title.ttf', tfont_size)
     dfont = ImageFont.truetype('fonts/date.ttf', dfont_size)
