@@ -101,7 +101,11 @@ def flashLights():
     LED_PIN = 13
     chip = gpiodevice.find_chip_by_platform()
     led = chip.line_offset_from_id(LED_PIN)
-    gpio = chip.request_lines(consumer="inky", config={led: gpiod.LineSettings(direction=Direction.OUTPUT, bias=Bias.DISABLED)})
+    try:
+        gpio = chip.request_lines(consumer="inky", config={led: gpiod.LineSettings(direction=Direction.OUTPUT, bias=Bias.DISABLED)})
+    except:
+        print("Exception occurred while getting GPIO lock")
+        return
 
     while True:
         gpio.set_value(led, Value.ACTIVE)
@@ -171,9 +175,9 @@ def loadEvents():
     im = Image.alpha_composite(im, overlay)
     im = im.convert("RGB")
     draw = ImageDraw.Draw(im)
-    dfont_size = 32 # date
-    tfont_size = 30 # title
-    lfont_size = 22 # Location
+    dfont_size = 36 # date
+    tfont_size = 36 # title
+    lfont_size = 32 # Location
 
     tfont = ImageFont.truetype('fonts/title.ttf', tfont_size)
     dfont = ImageFont.truetype('fonts/date.ttf', dfont_size)
