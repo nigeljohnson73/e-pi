@@ -124,24 +124,31 @@ def loadEvents():
     global all_done, now, max_screen_events
     # Get the data from the server
     if True:
-        retry = True
-        started = datetime.now(timezone.utc)
-        print (f"starting event list gathering")
-        while retry:
-            try:
-                response = requests.get(ics_url)
-                data = response.text
-                retry = False
-                print (f"Updating remote event list")
-            except:
-                now = datetime.now(timezone.utc)
-                duration = now - started
-                if duration.total_seconds() > connect_timeout:
-                    printf("Connection timeout for event list")
-                    return
+        try:
+            retry = True
+            started = datetime.now(timezone.utc)
+            print (f"Starting event list gathering")
+            while retry:
+                try:
+                    response = requests.get(ics_url)
+                    data = response.text
+                    retry = False
+                    print (f"OUTCOME: Updating remote event list")
+                except:
+                    now = datetime.now(timezone.utc)
+                    duration = now - started
+                    if duration.total_seconds() > connect_timeout:
+                        print("OUTCOME: Connection timeout for event list")
+                        endLoadEvents()
+                        return
     
-        with open(ics_file, "w") as f:
-            f.write(data)
+            with open(ics_file, "w") as f:
+                f.write(data)
+        except:
+            printf("OUTCOME: Nigels unhandled exception was trapped. FFS")
+            time.sleep(10)
+            endLoadEvents()
+            return
     
     result = jicson.fromFile(ics_file)
     #print(json.dumps(result, indent=4))
@@ -244,7 +251,9 @@ def loadEvents():
     print(f"Rendering display")
     inky.show()
     print(f"Process complete")
+    endLoadEvents()
 
+def endLoadEvents():
     # Signal we are all done
     c.acquire()
     all_done = True
