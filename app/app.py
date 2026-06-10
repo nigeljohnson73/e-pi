@@ -105,6 +105,7 @@ def flashLights():
         gpio = chip.request_lines(consumer="inky", config={led: gpiod.LineSettings(direction=Direction.OUTPUT, bias=Bias.DISABLED)})
     except:
         print("Exception occurred while getting GPIO lock")
+        all_done = True
         return
 
     while True:
@@ -155,6 +156,15 @@ def loadEvents():
     #print(result)
     
     events=result['VCALENDAR'][0]['VEVENT']
+    for e in events:
+        try:
+            # Because we sort on time, an all day event is stored differently, start by assuming a time.
+            print(f"event DTSTART: {e['DTSTART']}")
+        except:
+            print(f"Handled sorting exception: {e}")
+            print("handle as a full day event")
+            dte=e['DTSTART;VALUE=DATE']
+            e['DTSTART'] = dte+"T060000Z"
     print (f"Number of events: {len(events)}")
     events.sort(key=lambda x: x['DTSTART'], reverse=False)
     
@@ -197,7 +207,10 @@ def loadEvents():
     yy=BORDER
     screen_events = 0
     for e in events:
+        start = e.get('DTSTART')
+        print(f"got start: {start}")
         start = parse(e.get('DTSTART'))
+        print(f"parsed start: {start}")
         if start > now:
             when = start.strftime('%A, %d %B %Y')
             what = e.get('SUMMARY')
@@ -254,6 +267,7 @@ def loadEvents():
     endLoadEvents()
 
 def endLoadEvents():
+    global all_done
     # Signal we are all done
     c.acquire()
     all_done = True
