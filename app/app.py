@@ -168,7 +168,11 @@ def loadEvents():
     print (f"Number of events: {len(events)}")
     events.sort(key=lambda x: x['DTSTART'], reverse=False)
     
-    inky = auto(ask_user=False, verbose=True)
+    try:
+        inky = auto(ask_user=False, verbose=True)
+    except:
+        print("Inky not attached")
+        inky = False
     im = Image.open(img_file)
     width, height = im.size
     if width < height:
@@ -254,15 +258,21 @@ def loadEvents():
             print("")
     
     try:
-        print(f"Loading image to display")
-        inky.set_image(im, saturation=1.0)
+        im.save("/tmp/app.png")
+        if inky != False:
+            print(f"Loading image to display")
+            inky.set_image(im, saturation=1.0)
     except TypeError:
         print(f"Loading failed, loading resize image to display")
         resizedimage = im.resize(inky.resolution)
-        inky.set_image(resizedimage)
-    
-    print(f"Rendering display")
-    inky.show()
+        resizedimage.save("/tmp/app.png")
+        if inky != False:
+            inky.set_image(resizedimage)
+
+    if inky != False:
+        print(f"Rendering display")
+        inky.show()
+
     print(f"Process complete")
     endLoadEvents()
 
